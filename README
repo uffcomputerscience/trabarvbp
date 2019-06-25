@@ -2,4 +2,9 @@
 ## Trabalho Arvore B+ Turma A1
 
 ### Integrantes:
-* Yago de R. dos Santos
+* Pedro Palermo
+* Kayalla Pontes
+* Yago Rezende
+
+### Usage:
+Para usar basta executar o script makefile.sh, este script compila todos os arquivos e gera um arquivo executável main.

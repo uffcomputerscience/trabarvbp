@@ -4,9 +4,9 @@
 #include <stdio.h>
 
 typedef struct pizza {
-	int cod;
+	int cod, status, cat_ant, cat_prox, cat;
 	char nome[50];
-	char descricao[20];
+	char categoria[20];
 	float preco;
 } TPizza;
 
@@ -19,9 +19,20 @@ TPizza *pizza(int cod, char *nome, char *categoria, float preco);
 // Salva pizza no arquivo out, na posicao atual do cursor
 void salva_pizza(TPizza *p, FILE *out);
 
+// Salva pizza no final do arquivo out
+void dump_pizza(TPizza *p, FILE *out, FILE* catFile);
+
+// Atualiza a pizza no local do cursor no arquivo (grava por cima)
+void atualiza_pizza(FILE* out, TPizza* pizza);
+
 // Le uma pizza do arquivo in na posicao atual do cursor
 // Retorna um ponteiro para pizza lida do arquivo
 TPizza *le_pizza(FILE *in);
+
+// Le uma pizza do arquivo in na posicao atual do cursor
+// Retorna um ponteiro para pizza lida do arquivo (usar somente para o arquivo
+// da arvore gerada).
+TPizza *le_arvb_pizza(FILE *in);
 
 // Compara duas pizzas
 // Retorna 1 se os valores dos atributos de ambos forem iguais

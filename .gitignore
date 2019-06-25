@@ -1,3 +1,6 @@
 main
 main.exe
 dados_iniciais.dat
+*.trabson
+test.c
+test

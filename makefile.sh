@@ -1,2 +1,4 @@
 #!/bin/sh
-gcc -o main main.c pizza.c pizzaenc.c
+echo "Compiling code..."
+gcc -o main main.c pizza.c pizzaenc.c arvbm.c categoria.c
+echo "Done."
