@@ -44,18 +44,30 @@ int main(int argc, char **argv){
     inicializa_arquivo(arvFileName);
     inicializa_arquivo(dumpFileName);
     inicializa_arquivo(catFileName);
+
     //[ FIM DE INICIALIZA ARQUIVOS ]
 
-    // TPizza* p1 = cria_pizza(2, "pizza 1", "Salgada", 2.3f);
-    // TPizza* p2 = cria_pizza(4, "pizza 2", "Salgada", 2.28f);
-    // TPizza* p3 = cria_pizza(6, "pizza 3", "Especial", 2.95f);
-    // TPizza* p4 = cria_pizza(3, "pizza 4", "Doce", 4.95f);
-    // TPizza* p5 = cria_pizza(1, "pizza 5", "Doce", 4.95f);
-    // TPizza* p6 = cria_pizza(5, "pizza 6", "Doce", 4.95f);
-    // TPizza* p7 = cria_pizza(7, "pizza 7", "Doce", 4.95f);
-    // TPizza* p8 = cria_pizza(8, "pizza 7", "Doce", 4.95f);
-    // TPizza* p9 = cria_pizza(9, "pizza 7", "Doce", 4.95f);
-    // TPizza* p10 = cria_pizza(10, "pizza 7", "Doce", 4.95f);
+    // int i = 3;
+    while(1){
+        TPizza* tmp_pizza = le_pizza(file);
+        if(!tmp_pizza) break;
+        insere_pizza(arvFileName, dumpFileName, catFileName, tmp_pizza, t);
+        free(tmp_pizza);
+        // i--;
+    }
+
+    fclose(file);
+
+    TPizza* p1 = cria_pizza(2, "pizza 1", "Salgada", 2.3f);
+    TPizza* p2 = cria_pizza(4, "pizza 2", "Salgada", 2.28f);
+    TPizza* p3 = cria_pizza(6, "pizza 3", "Especial", 2.95f);
+    TPizza* p4 = cria_pizza(3, "pizza 4", "Doce", 4.95f);
+    TPizza* p5 = cria_pizza(1, "pizza 5", "Doce", 4.95f);
+    TPizza* p6 = cria_pizza(5, "pizza 6", "Doce", 4.95f);
+    TPizza* p7 = cria_pizza(7, "pizza 7", "Doce", 4.95f);
+    TPizza* p8 = cria_pizza(8, "pizza 7", "Doce", 4.95f);
+    TPizza* p9 = cria_pizza(9, "pizza 7", "Doce", 4.95f);
+    TPizza* p10 = cria_pizza(10, "pizza 7", "Doce", 4.95f);
 
     // insere_pizza(arvFileName, dumpFileName, catFileName, p1, t);
     // insere_pizza(arvFileName, dumpFileName, catFileName, p2, t);
@@ -68,6 +80,11 @@ int main(int argc, char **argv){
     // insere_pizza(arvFileName, dumpFileName, catFileName, p9, t);
     // insere_pizza(arvFileName, dumpFileName, catFileName, p7, t);
 
+    puts("imprime arvore: 1");
+    imprime_arvore(arvFileName, t, 0, 0L);
+    puts("fim da impressão");
+    puts("imprime arvore: 2");
+
     // free(p1);
     // free(p2);
     // free(p3);
@@ -79,29 +96,16 @@ int main(int argc, char **argv){
     // insere_pizza(arvFile, dumpFile, catFile, p3, t);
     // rewind(arvFile);
 
-    // FILE* arvFile = fopen(arvFileName, "rb");
-    // if(!arvFile) exit(1);
-    puts("imprime arvore: 1");
-    imprime_arvore(arvFileName, t, 0, 0L);
-    puts("fim da impressão");
-    puts("imprime arvore: 2");
+    // puts("imprime arvore: 1");
+    // imprime_arvore(arvFileName, t, 0, 0L);
+    // puts("fim da impressão");
+    // puts("imprime arvore: 2");
     // imprime_arvore(arvFileName, t, 0, 0L);
 
-    while(1){
-        TPizza* tmp_pizza = le_pizza(file);
-        if(!tmp_pizza) break;
-        insere_pizza(arvFileName, dumpFileName, catFileName, tmp_pizza, t);
-        free(tmp_pizza);
-        // tlep = insere_fim_tlep(tlep, tmp_pizza);
-        // dump_pizza(TPizza *pizza, FILE *out, FILE* catFile)
-        // dump_pizza(tmp_pizza, dumpFile, catFile);
-        // arvb = insere_pizza(arvb, tmp_pizza, t);
-        // imprime_pizza(tmp_pizza);
-    }
-    puts("imprime arvore: 1");
-    imprime_arvore(arvFileName, t, 0, 0L);
-    puts("fim da impressão");
-    puts("imprime arvore: 2");
+    // int cod;
+    // scanf("%d", &cod);
+    // imprime_pizza(busca_pizza(arvFileName, dumpFileName, cod, t));
+
     //
     // puts("Primeira Arvore!");
     // // imprime_tlep(tlep);

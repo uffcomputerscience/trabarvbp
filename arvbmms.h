@@ -24,7 +24,11 @@ TABMMS* le_nodo(FILE* in, int t);
 
 // Busca pizza pelo id
 // retorna pos da pizza no arqv de dados
-int busca_pizza(FILE* arvbmm, int cod, int t);
+int busca_pizza_end(FILE* arvbmm, int cod, int t);
+
+// Busca pizza dada o pizza->cod dela
+// retorna NULL caso nada seja encontrado
+TPizza* busca_pizza(char* arvbmsin_filename, char* pizzain_filename, int cod,int t);
 
 // Retorna o endereço do fim do arquivo passado
 // função auxiliar
@@ -40,8 +44,6 @@ void imprime_arvore(char* arv_filename, int t, int andar, int nodo_pos);
 // Este método seta o nchaves do nodo encontrado no local do cursor para 0
 void apaga_nodo(FILE* arvbmms, int t);
 
-// TABM *busca_pizza(TABM *a, int cod);
-// TABM *divisao(TABM *x, int i, TABM* y, int t);
-// TABM *insere_nao_completo(TABM *x, int mat, int t);
+int dump_pizza(TPizza *pizza, char* pizzaout_filename, char* catFile_filename, char* arvbmms_filename,int t);
 
 #endif

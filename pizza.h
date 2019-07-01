@@ -20,7 +20,7 @@ TPizza *cria_pizza(int cod, char *nome, char *categoria, float preco);
 void salva_pizza(TPizza *p, FILE *out);
 
 // Salva pizza no final do arquivo out
-int dump_pizza(TPizza *pizza, char* pizzaout_filename, char* catFile_filename);
+// int dump_pizza(TPizza *pizza, char* pizzaout_filename, char* catFile_filename);
 
 // Atualiza a pizza no local do cursor no arquivo (grava por cima)
 void atualiza_pizza(FILE* out, TPizza* pizza);

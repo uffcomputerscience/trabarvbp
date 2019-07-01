@@ -4,6 +4,7 @@
 #include "stdlib.h"
 #include "string.h"
 #include "files.h"
+#include "categoria.h"
 
 // Cria nodo da arvore b+
 TABMMS* cria_arvore_bmms(int t){
@@ -56,10 +57,11 @@ int salva_nodo(FILE* out, TABMMS* nodo, int t){
 TABMMS* le_nodo(FILE* in, int t){
     TABMMS* nodo = cria_arvore_bmms(t);
 	if (0 >= fread(&nodo->nchaves, sizeof(int), 1, in)){
-        puts("Erro ao ler nodo");
+        puts("nodo não encontrado");
 		// libera_nodo(nodo);
 		return NULL;
 	}
+    if(nodo->nchaves == 0) return NULL;
     fread(nodo->chave, sizeof(int), sizeof(int)*((t*2)-1), in);
     fread(&nodo->folha, sizeof(int), 1, in);
     fread(nodo->filho, sizeof(int), sizeof(int)*t*2, in);
@@ -96,21 +98,40 @@ void imprime_arvore(char* arv_filename, int t, int andar, int nodo_pos){
 
 // Busca pizza pelo id
 // retorna pos da pizza no arqv de dados
-int busca_pizza(FILE* arvbmms, int cod, int t){
+int busca_pizza_end(FILE* arvbmms, int cod, int t){
     TABMMS* a = le_nodo(arvbmms, t);
     if (!a) return -1;
     int i = 0;
     while ((i < a->nchaves) && (cod > a->chave[i])) i++;
     if ((i < a->nchaves) && (a->folha) && (cod == a->chave[i])){
         // pizza encontrada
-        // libera_nodo(a);
-        return a->pizza_pos[i];
+        int pos = a->pizza_pos[i];
+        libera_nodo(a);
+        return pos;
     }
     if (a-> folha) return -1;
     if (a->chave[i] == cod) i++;
     fseek(arvbmms, a->filho[i], SEEK_SET);
     // libera_nodo(a);
-    return busca_pizza(arvbmms, cod, t);
+    return busca_pizza_end(arvbmms, cod, t);
+}
+
+TPizza* busca_pizza(char* arvbmsin_filename, char* pizzain_filename, int cod, int t){
+    FILE* arv = fopen(arvbmsin_filename, "rb");
+    if(!arv) exit(1);
+    int pizza_pos = busca_pizza_end(arv, cod, t);
+    fclose(arv);
+    printf("pizza encontrada em %d\n", pizza_pos);
+    if(pizza_pos != -1) {
+        FILE* pizza_in = fopen(pizzain_filename, "rb");
+        if(!pizza_in) exit(1);
+        fseek(pizza_in, pizza_pos, SEEK_SET);
+        TPizza* resp = le_pizza(pizza_in);
+        fclose(pizza_in);
+        return resp;
+
+    }
+    return NULL;
 }
 
 
@@ -169,7 +190,6 @@ TABMMS *divisao(FILE* arvbmsout, TABMMS *raiz, int i, TABMMS* nodo_ant, int t){
     raiz->chave[i-1] = nodo_ant->chave[t-1];
     raiz->pizza_pos[i-1] = nodo_ant->pizza_pos[t-1];
     raiz->nchaves++;
-    // libera_nodo(nodo_dir);
     return raiz;
 }
 
@@ -209,7 +229,7 @@ int insere_nao_completo(char* arvbmsout_filename, char* pizzaout_filename, char*
         }
 
         arvbmms->chave[i+1] = pizza->cod;
-        arvbmms->pizza_pos[i+1] = dump_pizza(pizza, pizzaout_filename, catFile_filename);
+        arvbmms->pizza_pos[i+1] = dump_pizza(pizza, pizzaout_filename, catFile_filename, arvbmsout_filename, t);
         printf("Salvando a pizza %d em %d na pos %d do arqv de dados\n", arvbmms->chave[i+1], i+1, arvbmms->pizza_pos[i+1]);
         arvbmms->nchaves++;
         // salva nodo atualizado
@@ -234,14 +254,6 @@ int insere_nao_completo(char* arvbmsout_filename, char* pizzaout_filename, char*
 
     if(nodo_filho->nchaves == ((2*t)-1)){
         puts("nodo filho está cheio");
-        // Nodo filho está cheio
-        // arvbmsout = reload_file(arvbmsout, arvbmsout_filename, "rb+");
-        // puts("Dividing ...");
-        // imprime_nodo(arvbmms);
-        // puts("#");
-        // novo_nodo = divisao(arvbmsout, novo_nodo, 1, arvbmms, t);
-        // puts("To");
-        // imprime_nodo(arvbmms);
 
         arvbmsout = reload_file(arvbmsout, arvbmsout_filename, "rb+");
         fseek(arvbmsout, nodo_pos, SEEK_SET);
@@ -282,7 +294,7 @@ int insere_pizza(char* arvbmsout_filename, char* pizzaout_filename, char* catFil
     FILE* arvbmsout = fopen(arvbmsout_filename, "rb");
     if(!arvbmsout) exit(1);
     // tenta encontrar a pizza
-    int pizza_pos = busca_pizza(arvbmsout, pizza->cod, t);
+    int pizza_pos = busca_pizza_end(arvbmsout, pizza->cod, t);
     fclose(arvbmsout);
     if(pizza_pos != -1){
         //update de pizza
@@ -310,7 +322,7 @@ int insere_pizza(char* arvbmsout_filename, char* pizzaout_filename, char* catFil
         arvbmms->chave[0] = pizza->cod;
         arvbmms->nchaves = 1;
         // printf("Pos da pizza nova %d: %d\n", arvbmms->chave[0], arvbmms->pizza_pos[0]);
-        arvbmms->pizza_pos[0] = dump_pizza(pizza, pizzaout_filename, catFile_filename);
+        arvbmms->pizza_pos[0] = dump_pizza(pizza, pizzaout_filename, catFile_filename, arvbmsout_filename, t);
         printf("Pos da pizza nova %d: %d\n", arvbmms->chave[0], arvbmms->pizza_pos[0]);
 
         arvbmsout = reload_file(arvbmsout, arvbmsout_filename, "wb");
@@ -364,6 +376,73 @@ void libera_nodo(TABMMS* nodo){
         free(nodo->filho);
         free(nodo);
     }
+}
+
+int dump_pizza(TPizza *pizza, char* pizzaout_filename, char* catFile_filename, char* arvbmms_filename, int t){
+	FILE *out = fopen(pizzaout_filename, "ab+");
+	if(!out) exit(1);
+	// fseek(out, end, SEEK_SET);
+	int end = end_fim_do_arqv(out);
+	puts("pizza salva");
+	imprime_pizza(pizza);
+	salva_pizza(pizza, out);
+
+    return end;
+
+	FILE* catFile = fopen(catFile_filename, "rb+");
+	if(!catFile) exit(1);
+
+	TCat* cat = busca_cat_por_nome(catFile, pizza->categoria);
+	int cat_pos = ftell(catFile);
+	if(!cat){
+		// Caso seja categoria nova.
+		cat = cria_cat(pizza->categoria);
+		cat->prim_pizza = pizza->cod;
+		cat->ult_pizza = pizza->cod;
+		salva_cat(catFile, cat);
+		pizza->cat_ant = -1;
+		pizza->cat_prox = -1;
+		pizza->cat = cat_pos;
+		printf("Cria cat at %d, ", cat_pos);
+		imprime_cat(cat);
+	}else{
+		// Ajustar o cursor para retornar a posição anterior ao auto incremento
+		cat_pos -= sizeof(TCat);
+
+		//ajusta os ponteiros da cadeia
+		pizza->cat_ant = cat->ult_pizza;
+		cat->ult_pizza = pizza->cod;
+
+		//atualiza cat
+		catFile = reload_file(catFile, catFile_filename, "rb+");
+		fseek(catFile, cat_pos, SEEK_SET);
+		atualiza_cat(catFile, cat);
+		printf("Atualiza cat at %d \n", cat_pos);
+		imprime_cat(cat);
+
+		// atualiza o anterior da cadeia
+		out = reload_file(out, pizzaout_filename, "rb+");
+
+        FILE* arvbmmsin = fopen(arvbmms_filename, "rb");
+        if(!arvbmmsin) exit(1);
+        int pizza_ant_pos = busca_pizza_end(arvbmmsin, pizza->cat_ant, t);
+        fclose(arvbmmsin);
+		fseek(out, pizza_ant_pos, SEEK_SET);
+		TPizza* tmp_pizza = (TPizza*) malloc(sizeof(TPizza));
+		fread(tmp_pizza, sizeof(TPizza), 1, out);
+		tmp_pizza->cat_prox = pizza->cod;
+		fseek(out, pizza_ant_pos, SEEK_SET);
+		atualiza_pizza(out, tmp_pizza);
+		printf("Atualiza tmp pizza %d at %d: ", tmp_pizza->cod, pizza->cat_ant);
+		imprime_pizza(tmp_pizza);
+        free(tmp_pizza);
+	}
+	fseek(out, end, SEEK_SET);
+	atualiza_pizza(out, pizza);
+	free(cat);
+	fclose(out);
+	fclose(catFile);
+	return end;
 }
 
 int tamanho_abmms_bytes(int t){
