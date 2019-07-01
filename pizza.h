@@ -14,13 +14,13 @@ typedef struct pizza {
 void imprime_pizza(TPizza *p);
 
 // Cria pizza
-TPizza *pizza(int cod, char *nome, char *categoria, float preco);
+TPizza *cria_pizza(int cod, char *nome, char *categoria, float preco);
 
 // Salva pizza no arquivo out, na posicao atual do cursor
 void salva_pizza(TPizza *p, FILE *out);
 
 // Salva pizza no final do arquivo out
-void dump_pizza(TPizza *p, FILE *out, FILE* catFile);
+int dump_pizza(TPizza *pizza, char* pizzaout_filename, char* catFile_filename);
 
 // Atualiza a pizza no local do cursor no arquivo (grava por cima)
 void atualiza_pizza(FILE* out, TPizza* pizza);

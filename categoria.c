@@ -27,7 +27,7 @@ TLEP* busca_pizzas(TCat* cat, FILE* in){
     //TODO
     fseek(in, cat->prim_pizza, SEEK_SET);
     TPizza* tmp_pizza = (TPizza*) malloc(sizeof(TPizza));
-    while(0 < fread(pizza, sizeof(TPizza), 1, in)){
+    while(0 < fread(tmp_pizza, sizeof(TPizza), 1, in)){
         if(tmp_pizza->cat_prox == -1) break;
     }
     return NULL;

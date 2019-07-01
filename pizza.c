@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "constant.h"
 #include "categoria.h"
+#include "files.h"
 
 void imprime_pizza(TPizza *p)
 {
@@ -10,7 +11,7 @@ void imprime_pizza(TPizza *p)
 }
 
 
-TPizza *pizza(int cod, char *nome, char *categoria, float preco)
+TPizza *cria_pizza(int cod, char *nome, char *categoria, float preco)
 {
 	TPizza *p = (TPizza *) malloc(sizeof(TPizza));
 	if (p) memset(p, 0, sizeof(TPizza));
@@ -26,80 +27,8 @@ TPizza *pizza(int cod, char *nome, char *categoria, float preco)
 }
 
 
-void salva_pizza(TPizza *p, FILE *out)
-{
+void salva_pizza(TPizza *p, FILE *out){
 	fwrite(p, sizeof(TPizza), 1, out);
-	// fwrite(&p->cod, sizeof(int), 1, out);
-	// fwrite(p->nome, sizeof(char), sizeof(p->nome), out);
-	// fwrite(p->categoria, sizeof(char), sizeof(p->categoria), out);
-	// fwrite(&p->preco, sizeof(float), 1, out);
-	// fwrite(&p->status, sizeof(int), 1, out);
-}
-
-// Ambos os arquivos devem ser abertos no formato rb+
-void dump_pizza(TPizza *pizza, FILE *out, FILE* catFile){
-	// disable buffering
-	setbuf(out, NULL);// disable buffering
-	setbuf(catFile, NULL);
-
-	puts("Dumping...");
-	//Salva a pizza
-	fseek(out, 0L, SEEK_END);
-	int pizza_pos = ftell(out);
-	fwrite(pizza, sizeof(TPizza), 1, out);
-
-	puts("Pizza Written...");
-
-	// Busca pela categoria
-	TCat* cat = busca_cat_por_nome(catFile, pizza->categoria);
-	int cat_pos = ftell(catFile);
-	if(cat){
-		// Ajustar o cursor para retornar a posição anterior ao auto incremento
-		cat_pos -= sizeof(TCat);
-		puts("#####");
-		fseek(catFile, cat_pos, SEEK_SET);
-		TCat* tmp_cat = (TCat*) malloc(sizeof(TCat));
-		fread(tmp_cat, sizeof(TCat), 1, catFile);
-		imprime_cat(tmp_cat);
-		printf("At %d\n", cat_pos);
-		puts("#####");
-	}
-
-	if(!cat){
-		// Caso seja categoria nova.
-		cat = cria_cat(pizza->categoria);
-		cat->prim_pizza = pizza_pos;
-		cat->ult_pizza = pizza_pos;
-		salva_cat(catFile, cat);
-		pizza->cat_ant = -1;
-		pizza->cat_prox = -1;
-		pizza->cat = cat_pos;
-		printf("Cria cat at %d, ", cat_pos);
-		imprime_cat(cat);
-	}else{
-		//ajusta os ponteiros da cadeia
-		pizza->cat_ant = cat->ult_pizza;
-		cat->ult_pizza = pizza_pos;
-
-		//atualiza cat
-		fseek(catFile, cat_pos, SEEK_SET);
-		atualiza_cat(catFile, cat);
-		printf("Atualiza cat at %d ", cat_pos);
-		imprime_cat(cat);
-
-		// atualiza o anterior da cadeia
-		fseek(out, pizza->cat_ant, SEEK_SET);
-		TPizza* tmp_pizza = (TPizza*) malloc(sizeof(TPizza));
-		fread(tmp_pizza, sizeof(TPizza), 1, out);
-		tmp_pizza->cat_prox = pizza_pos;
-		fseek(out, pizza->cat_ant, SEEK_SET);
-		atualiza_pizza(out, tmp_pizza);
-		printf("Atualiza pizza ");
-		imprime_pizza(tmp_pizza);
-	}
-	fseek(out, pizza_pos, SEEK_SET);
-	atualiza_pizza(out, pizza);
-	free(cat);
 }
 
 // Atualiza a pizza no local do cursor no arquivo (grava por cima)
@@ -107,6 +36,91 @@ void atualiza_pizza(FILE* out, TPizza* pizza){
 	fwrite(pizza, sizeof(TPizza), 1, out);
 }
 
+// Ambos os arquivos devem ser abertos no formato rb+
+int dump_pizza(TPizza *pizza, char* pizzaout_filename, char* catFile_filename){
+	FILE *out = fopen(pizzaout_filename, "rb+");
+	if(!out) exit(1);
+	int end = end_fim_do_arqv(out);
+	fseek(out, end, SEEK_SET);
+	salva_pizza(pizza, out);
+	fclose(out);
+	return end;
+	// puts(pizzaout_filename);
+	// FILE *out = fopen(pizzaout_filename, "wb");
+	// FILE* catFile = fopen(catFile_filename, "rb");
+	//
+	// // disable buffering
+	// // setbuf(out, NULL);
+	// // setbuf(catFile, NULL);
+	//
+	// puts("Dumping...");
+	// //Salva a pizza
+	// fseek(out, 0L, SEEK_END);
+	// int pizza_pos = ftell(out);
+	// if(fwrite(pizza, sizeof(TPizza), 1, out) == 1){
+	// 	printf("Pizza %d salva em %d.\n", pizza->cod, pizza_pos);
+	// }else{
+	// 	puts("Erro ao salvar a pizza");
+	// }
+	//
+	// // Busca pela categoria
+	// TCat* cat = busca_cat_por_nome(catFile, pizza->categoria);
+	// int cat_pos = ftell(catFile);
+	// if(cat){
+	// 	// Ajustar o cursor para retornar a posição anterior ao auto incremento
+	// 	cat_pos -= sizeof(TCat);
+	// 	puts("#####");
+	// 	fseek(catFile, cat_pos, SEEK_SET);
+	// 	TCat* tmp_cat = (TCat*) malloc(sizeof(TCat));
+	// 	fread(tmp_cat, sizeof(TCat), 1, catFile);
+	// 	imprime_cat(tmp_cat);
+	// 	printf("At %d\n", cat_pos);
+	// 	puts("#####");
+	// }
+	// if(!cat){
+	// 	// Caso seja categoria nova.
+	// 	catFile = reload_file(catFile, catFile_filename, "wb");
+	//
+	// 	cat = cria_cat(pizza->categoria);
+	// 	cat->prim_pizza = pizza_pos;
+	// 	cat->ult_pizza = pizza_pos;
+	// 	salva_cat(catFile, cat);
+	// 	pizza->cat_ant = -1;
+	// 	pizza->cat_prox = -1;
+	// 	pizza->cat = cat_pos;
+	// 	printf("Cria cat at %d, ", cat_pos);
+	// 	imprime_cat(cat);
+	// }else{
+	// 	//ajusta os ponteiros da cadeia
+	// 	pizza->cat_ant = cat->ult_pizza;
+	// 	cat->ult_pizza = pizza_pos;
+	//
+	// 	//atualiza cat
+	// 	catFile = reload_file(catFile, catFile_filename, "wb");
+	// 	fseek(catFile, cat_pos, SEEK_SET);
+	// 	atualiza_cat(catFile, cat);
+	// 	printf("Atualiza cat at %d \n", cat_pos);
+	// 	imprime_cat(cat);
+	//
+	// 	// atualiza o anterior da cadeia
+	// 	out = reload_file(out, pizzaout_filename, "rb+");
+	// 	fseek(out, pizza->cat_ant, SEEK_SET);
+	// 	TPizza* tmp_pizza = (TPizza*) malloc(sizeof(TPizza));
+	// 	fread(tmp_pizza, sizeof(TPizza), 1, out);
+	// 	tmp_pizza->cat_prox = pizza_pos;
+	// 	fseek(out, pizza->cat_ant, SEEK_SET);
+	// 	atualiza_pizza(out, tmp_pizza);
+	// 	printf("Atualiza tmp pizza %d at %d: ", tmp_pizza->cod, pizza->cat_ant);
+	// 	imprime_pizza(tmp_pizza);
+	// }
+	// out = reload_file(out, pizzaout_filename, "wb");
+	// fseek(out, pizza_pos, SEEK_SET);
+	// atualiza_pizza(out, pizza);
+	// free(cat);
+	// fclose(out);
+	// fclose(catFile);
+	// return pizza_pos;
+}
 
 TPizza *le_pizza(FILE *in)
 {
